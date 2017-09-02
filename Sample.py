@@ -3,7 +3,7 @@
 # This file executes the compiler by 
 # passing the file handle to "source.mod" to it
 
-import Compiler
+import compiler
 
 fh = open("source.mod", 'r')
 

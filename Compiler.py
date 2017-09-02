@@ -1,1 +1,1 @@
-import OSS
+import OssOSS as OSS
