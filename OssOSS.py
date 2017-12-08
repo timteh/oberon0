@@ -1,4 +1,6 @@
-#some ideas for data types
+
+# Author: Timothy Teh
+# some ideas for data types
 # constants: tuple of 1
 # references : list of 1
 # records: class
@@ -72,7 +74,7 @@ class keyTabRec:
 keyTab =  [keyTabRec() for x in range(KW[0])]
 
 def Mark(msg):
-    p = R.tell()
+    p = R[0].tell()
     if p > errpos[0]:
         print "  pos " + str(p) + "  " + msg + "\n"
     errpos[0] = p
@@ -83,6 +85,7 @@ def Get(sym): #sym is a reference
         i = 0 
         k = 0
         while True:
+            # Read in all the characters of the identifier
             if i < IdLen[0]:
                 id[i] = ch[0]
                 i = i + 1
@@ -100,7 +103,7 @@ def Get(sym): #sym is a reference
         val[0] = 0
         sym[0] = number[0]
         while True:
-            #LONGINT is defined as INT32 in this program -  LONGINT = Oberon.INT32
+            # LONGINT is defined as INT32 in this program -  LONGINT = Oberon.INT32
             # Test to see if adding the next tenth digit will exceed INT32
             if val[0] <= ((2147483647 - ord(ch[0]) + ord('0')) / 10):
                 val[0] = 10 * val[0] + (ord(ch[0]) - ord('0'))
@@ -203,9 +206,9 @@ def Get(sym): #sym is a reference
         elif ch[0] == ']':
             Texts.Read(R, ch)
             sym[0] = rbrak[0]
-        elif ch[0].isdigit:
+        elif ch[0].isdigit():
             Number()
-        elif ch[0].isalpha:
+        elif ch[0].isalpha():
             Ident()
         elif ch[0] == '~':
             Texts.Read(R, ch)
@@ -227,6 +230,7 @@ def EnterKW(sym, name):
     nkw[0]+=1
 
 # BEGIN
+error[0] = True
 nkw[0] = 0
 EnterKW(null, "BY")
 EnterKW(do, "DO")
