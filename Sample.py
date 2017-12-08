@@ -3,15 +3,13 @@
 # This file executes the compiler by 
 # passing the file handle to "source.mod" to it
 
-import compiler
+import OssCompiler
 
-fh = open("source.mod", 'r')
+# import OSS required to close the file
+import OssOSS
 
-print fh.seek(5)
-print fh.read(1)
-print fh.read(1)
-print fh.read(1)
-print fh.read(1)
-print fh.read(1)
-print fh.tell()
-fh.close()
+#test compiler
+OssCompiler.Compile()
+
+#close the OSS file handle as stated above
+OssOSS.R[0].close()
