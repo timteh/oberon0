@@ -8,42 +8,42 @@ TYP = Constant(5)
 SPROC = Constant(7)
 
 class Item:
-    mode = 0
-    lev = 0
-    _type = 0 # Pointer to TypeDesc
-    a = 0
-    b = 0
-    c = 0
-    d = 0
+    m_mode = 0
+    m_lev = 0
+    m_type = 0 # Pointer to TypeDesc
+    m_a = 0
+    m_b = 0
+    m_c = 0
+    m_d = 0
 
 class ObjDesc:
-    _class = 0
-    lev = 0
-    _next = 0 # Pointer to ObjDesc
-    dsc = 0 # Pointer to ObjDesc
-    _type = 0 # Pointer to TypeDesc
-    name = 0
+    m_class = 0
+    m_lev = 0
+    m_next = 0 # Pointer to ObjDesc
+    m_dsc = 0 # Pointer to ObjDesc
+    m_type = 0 # Pointer to TypeDesc
+    m_name = 0
     val = 0
 
 class TypeDesc:
-    form = 0
-    fields = 0 # Pointer to ObjDesc
-    base = 0 # Pointer to TypeDesc
-    size = 0
-    len = 0
+    m_form = 0
+    m_fields = 0 # Pointer to ObjDesc
+    m_base = 0 # Pointer to TypeDesc
+    m_size = 0
+    m_len = 0
 
 # Global variables
-intType  = [None] #pointer to TypeDesc
-boolType = [None] #pointer to TypeDesc
-curlev = [0]
-pc = [0]
-relx = [0]
-cno = [0]
-regs = [None]
+intType  = Variable(None) #pointer to TypeDesc
+boolType = Variable(None) #pointer to TypeDesc
+curlev = Variable(0)
+pc = Variable(0)
+relx = Variable(0)
+cno = Variable(0)
+regs = Variable(None)
 
 def Open():
-    curlev[0] = 0
-    pc[0] = 0
-    relx[0] = 0
-    cno[0] = 0
-    regs[0] = set()
+    curlev.m_value = 0
+    pc.m_value = 0
+    relx.m_value = 0
+    cno.m_value = 0
+    regs.m_value = set()
