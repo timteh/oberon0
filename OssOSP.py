@@ -18,6 +18,14 @@ universe = Pointer(OSG.ObjDesc)
 guard = Pointer(OSG.ObjDesc) 
 testguard = Pointer(OSG.ObjDesc)
 
+def SimpleExpression(x): #x : OSG.Item
+    
+
+def expression(x): #x : OSG.Item
+    y = OSG.Item()
+    op = Variable(0)
+    SimpleExpression(x)
+
 def NewObj(obj, Class):
     new = Pointer(OSG.ObjDesc)
     x = Pointer(OSG.ObjDesc)
