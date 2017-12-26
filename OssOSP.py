@@ -3,9 +3,9 @@
 
 # some ideas for data types
 # constants: tuple of 1
-# references : list of 1
+# references : Variable class from util module, or a class itself
 # records: class
-# global variabes : list of 1
+# global variabes : Variable() class
 
 import OssOSS as OSS
 import OssOSG as OSG
@@ -13,32 +13,36 @@ from Util import *
 
 # Global variables
 sym = Variable(0)
-topScope = Variable(None) # Pointer to ObjDesc
-universe = Variable(None)
-guard = Variable(None)
+topScope = Pointer(OSG.ObjDesc) # Pointer to ObjDesc
+universe = Pointer(OSG.ObjDesc) 
+guard = Pointer(OSG.ObjDesc) 
+testguard = Pointer(OSG.ObjDesc)
 
-def NewObj(obj, _class):
-    x = topScope.m_value
+def NewObj(obj, Class):
+    new = Pointer(OSG.ObjDesc)
+    x = Pointer(OSG.ObjDesc)
+    x.m_value = topScope.m_value
     guard.m_value.m_name = OSS.id.m_value
-    while x.m_next.name != OSS.id.m_value:
-        x = x.m_next
-        if x.m_next == guard.m_value:
-            new = OSG.ObjDesc()
-            new.name = OSS.id.m_value
-            new.m_class = _class
-            new.m_next = guard.m_value
-            x.m_next = new
-            obj.m_value = new
+    while x.m_value.m_next.m_name != OSS.id.m_value:
+        x.m_value = x.m_value.m_next
+        if x.m_value.m_next == guard.m_value:
+            NEW(new)
+            new.m_value.m_name = OSS.id.m_value
+            new.m_value.m_class = Class
+            new.m_value.m_next = guard.m_value
+            x.m_value.m_next = new.m_value
+            obj.m_value = new.m_value
         else:
-            obj.m_value = x.m_next
+            obj.m_value = x.m_value.m_next
             OSS.Mark("mult def")
 
 def OpenScope():
-    s = OSG.ObjDesc() # Pointer to ObjDesc
-    s.m_class = OSG.HEAD.getValue
-    s.m_dsc = topScope.m_value
-    s.m_next = guard.m_value
-    topScope.m_value = s
+    s = Pointer(OSG.ObjDesc) # Pointer to ObjDesc
+    NEW(s)
+    s.m_value.m_class = OSG.HEAD.getValue()
+    s.m_value.m_dsc = topScope.m_value
+    s.m_value.m_next = guard.m_value
+    topScope.m_value = s.m_value
 
 def expression(item):
     pass
@@ -46,11 +50,28 @@ def expression(item):
 def Type(Type):
     pass
 
+def IdentList(Class, first):
+    obj = OSG.ObjDesc()
+    if sym == OSS.IDENT.getValue():
+        NewObj(first, Class)
+        OSS.Get(sym)
+        while sym == OSS.COMMA.getValue():
+            OSS.Get(sym)
+            if sym == OSS.IDENT.getValue():
+                NewObj(obj, Class)
+                OSS.Get(sym)
+            else:
+                OSS.Mark("ident?")
+        if sym == OSS.COLON.getValue():
+            OSS.Get(sym)
+        else:
+            OSS.Mark(":?")
+
 def declarations(varsize):
-    obj = Variable(None)  # Reference Pointer to ObjDesc
-    first = Variable(None) # Pointer to ObjDesc
+    obj = Pointer(OSG.ObjDesc)  # Reference Pointer to ObjDesc
+    first = Pointer(OSG.Item) # Pointer to ObjDesc
     x = OSG.Item() # x is a reference 
-    tp = Variable(None) # Pointer to TypeDesc
+    tp = Pointer(OSG.TypeDesc) # Pointer to TypeDesc
     L = Variable(0)
     if sym.m_value < OSS.CONST.getValue() and sym.m_value != OSS.END.getValue():
         OSS.Mark("declaration?")
@@ -98,9 +119,20 @@ def declarations(varsize):
                 IdentList(OSG.VAR.getValue(), first)
                 Type(tp)
                 obj.m_value = first.m_value
-                #while obj.m_value != guard.m_value:
-                    #obj.m_value.m_type = 
-
+                while obj.m_value != guard.m_value:
+                    obj.m_value.m_type = tp.m_value
+                    obj.m_value.m_lev = OSG.curlev.m_value
+                    varsize.m_value = varsize.m_value + obj.m_type.m_size
+                    obj.m_value.m_val -= varsize.m_value
+                    obj.m_value = obj.m_value.m_next
+                if sym.m_value == OSS.SEMICOLON.getValue():
+                    OSS.Get(sym)
+                else:
+                    OSS.Mark("; ?")
+        if sym.m_value >= OSS.CONST.getValue() and sym.m_value <= OSS.VAR.getValue():
+            OSS.Mark("; ?")
+        else:
+            break
 
 def Module(S):
     # Varsize is a reference
@@ -136,9 +168,9 @@ def enter(cl, n, name, Type):
 
 # BEGIN
 print "Oberon0 Compiler  9.2.95"
-guard.m_value = OSG.ObjDesc()
+NEW(guard)
 guard.m_value.m_class = OSG.VAR.getValue()
-guard.m_value.m_type = OSG.intType.m_value
+guard.m_value.m_type = OSG.intType
 guard.m_value.m_val = 0
 topScope.m_value = None
 OpenScope()
