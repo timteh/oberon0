@@ -12,4 +12,4 @@ import OssOSS
 OssCompiler.Compile()
 
 #close the OSS file handle as stated above
-OssOSS.R[0].close()
+OssOSS.R.m_value.close()

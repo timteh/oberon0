@@ -8,33 +8,36 @@ TYP = Constant(5)
 SPROC = Constant(7)
 
 class Item:
-    m_mode = 0
-    m_lev = 0
-    m_type = 0 # Pointer to TypeDesc
-    m_a = 0
-    m_b = 0
-    m_c = 0
-    m_d = 0
+    def __init__(self):
+        self.m_mode = 0
+        self.m_lev = 0
+        self.m_type = None# Pointer to TypeDesc
+        self.m_a = 0
+        self.m_b = 0
+        self.m_c = 0
+        self.m_d = 0
 
 class ObjDesc:
-    m_class = 0
-    m_lev = 0
-    m_next = 0 # Pointer to ObjDesc
-    m_dsc = 0 # Pointer to ObjDesc
-    m_type = 0 # Pointer to TypeDesc
-    m_name = 0
-    val = 0
+    def __init__(self):
+        self.m_class = 0
+        self.m_lev = 0
+        self.m_next = None # Pointer to ObjDesc
+        self.m_dsc =  None # Pointer to ObjDesc
+        self.m_type = None # Pointer to TypeDesc
+        self.m_name = 0
+        self.val = 0
 
 class TypeDesc:
-    m_form = 0
-    m_fields = 0 # Pointer to ObjDesc
-    m_base = 0 # Pointer to TypeDesc
-    m_size = 0
-    m_len = 0
+    def __init__(self):    
+        self.m_form = 0
+        self.m_fields = None # Pointer to ObjDesc
+        self.m_base = None # Pointer to TypeDesc
+        self.m_size = 0
+        self.m_len = 0
 
 # Global variables
-intType  = Variable(None) #pointer to TypeDesc
-boolType = Variable(None) #pointer to TypeDesc
+intType  = Pointer(TypeDesc) #pointer to TypeDesc
+boolType = Pointer(TypeDesc) #pointer to TypeDesc
 curlev = Variable(0)
 pc = Variable(0)
 relx = Variable(0)
