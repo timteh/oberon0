@@ -18,13 +18,115 @@ universe = Pointer(OSG.ObjDesc)
 guard = Pointer(OSG.ObjDesc) 
 testguard = Pointer(OSG.ObjDesc)
 
+def find(obj):
+    s = Pointer(OSG.ObjDesc)
+    x = Pointer(OSG.ObjDesc)
+    x.m_value = topScope.m_value
+    guard.m_value.m_name = OSS.id.m_value
+    while True:
+        x.m_value = s.m_value.m_next
+        while (x.m_value.m_name != OSS.id.m_value):
+            x.m_value = x.m_value.m_next
+        if x.m_value != guard.m_value:
+            obj.m_value = x.m_value
+            break
+        if x.m_value == universe.m_value:
+            obj.m_value = x.m_value
+            OSS.Mark("undef")
+            break
+        s.m_value = s.m_value.m_dsc
+
+def FindField(obj, List):
+    guard.m_value.m_name = OSS.id.m_value
+    while List.m_value.m_name != OSS.id.m_value:
+        List.m_value = List.m_value.m_next
+    obj.m_value = List.m_value
+
+def selector(x):
+    y = OSG.Item()
+    obj = Pointer(OSG.ObjDesc)
+    while sym.m_value == OSS.LBRAK.getValue() or sym.m_value == OSS.PERIOD.getValue():
+        if sym.m_value == OSS.LBRAK.getValue():
+            OSS.Get(sym)
+            expression(y)
+            if x.m_type.m_form == OSG.ARRAY.getValue():
+                OSG.Index(x,y)
+            else:
+                OSS.Mark("not an array")
+            if sym.m_value == OSS.RBRAK.getValue():
+                OSS.Get(sym)
+            else:
+                OSS.Mark("]?")
+        else:
+            OSS.Get(sym)
+            if sym.m_value == OSS.IDENT.getValue():
+                if x.m_type.m_form == OSG.RECORD.getValue():
+                    FindField(obj, x.m_type.m_fields)
+                    OSS.Get(sym)
+                    if obj.m_value != guard.m_value:
+                        OSG.Field(x, obj)
+                    else:
+                        OSS.Mark("undef")
+                else:
+                    OSS.Mark("not a record")
+            else:
+                OSS.Mark("ident?")
+                
+
+def factor(x):
+    obj = Pointer(OSG.Object)
+    if sym.m_value < OSS.LPAREN.getValue():
+        OSS.Mark("ident?")
+        while True:
+            OSS.Get(sym)
+            if (sym.m_value >= OSS.LPAREN.getValue()):
+                break
+    if sym.m_value == OSS.IDENT.getValue():
+        find(obj)
+        OSG.MakeItem(x, obj)
+        selector(x)
+    elif sym.m_value == OSS.NUMBER.getValue():
+        OSG.MakeConstItem(x, OSG.intType, OSS.val)
+        OSS.Get(sym)
+    elif sym.m_value == OSS.LPAREN.getValue():
+        OSS.Get(sym)
+        expression(x)
+        if sym.m_value == OSS.RPAREN.getValue():
+            OSS.Get(sym)
+        else:
+            OSS.Mark(")?")
+    elif sym.m_value == OSS.NOT.getValue():
+        OSS.Get(sym)
+        factor(x)
+        OSG.Op1(OSS.NOT.getValue(), x)
+    else:
+        OSS.Mark("factor?")
+        OSG.MakeItem(x, guard)
+
+def term(x):
+    y = OSG.Item()
+    factor(x)
+
 def SimpleExpression(x): #x : OSG.Item
-    
+    y = OSG.Item()
+    if sym.m_value == OSS.PLUS.getValue():
+        OSS.Get(sym)
+        term(x)
+    elif sym.m_value == OSS.MINUS.getValue():
+        OSS.Get(sym)
+        PSG.Op1(OSS.MINUS.getValue(), x)
+    else:
+        term(x)
 
 def expression(x): #x : OSG.Item
     y = OSG.Item()
     op = Variable(0)
     SimpleExpression(x)
+    if sym >= OSS.EQL.getValue() and sym <= OSS.GTR.getValue():
+        op.m_value = sym.m_value
+        OSS.Get(sym)
+        SimpleExpression(y)
+        OSG.Relation(op, x, y)
 
 def NewObj(obj, Class):
     new = Pointer(OSG.ObjDesc)
@@ -51,9 +153,6 @@ def OpenScope():
     s.m_value.m_dsc = topScope.m_value
     s.m_value.m_next = guard.m_value
     topScope.m_value = s.m_value
-
-def expression(item):
-    pass
 
 def Type(Type):
     pass
