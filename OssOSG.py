@@ -1,5 +1,6 @@
 # imports
 import OssOSS as OSS
+import OssRISC as RISC
 from Util import *
 
 # "constants"
@@ -77,10 +78,10 @@ class Item:
         self.m_mode = 0
         self.m_lev = 0
         self.m_type = None# Pointer to TypeDesc
-        self.m_a = 0
-        self.m_b = 0
+        self.m_a = Variable(0)
+        self.m_b = Variable(0)
         self.m_c = 0
-        self.m_r = 0
+        self.m_r = Variable(0)
 
 class ObjDesc:
     def __init__(self):
@@ -90,7 +91,7 @@ class ObjDesc:
         self.m_dsc =  None # Pointer to ObjDesc
         self.m_type = None # Pointer to TypeDesc
         self.m_name = 0
-        self.val = 0
+        self.m_val = 0
 
 class TypeDesc:
     def __init__(self):    
@@ -107,6 +108,8 @@ curlev = Variable(0)
 pc = Variable(0)
 relx = Variable(0)
 cno = Variable(0)
+entry = Variable(0)
+fixlist = Variable(0)
 regs = Variable(set())
 code = Variable([0]*MAXCODE.getValue())
 rel = Variable([0]*MAXREL.getValue())
@@ -114,33 +117,36 @@ comname = Variable(NOFCOM.getValue() * [[''] * OSS.IDLEN.getValue()])
 comadr = Variable(NOFCOM.getValue() * [0])
 mnemo = Variable(54 *[5*['']])
 
+def IncLevel(n):
+    INC(curlev, n)
+
 def MakeConstItem(x, type, val):
     x.m_mode = CONST.getValue()
     x.m_type = typ.m_value
-    x.m_a = val.m_value
+    x.m_a.m_value = val.m_value
 
 def MakeItem(x, y):
     r = Variable(0)
     x.m_mode = y.m_value.m_class
     x.m_type = y.m_value.m_type
     x.m_lev = y.m_value.m_lev
-    x.m_a = y.m_value.m_val
+    x.m_a.m_value = y.m_value.m_val
     if y.m_value.m_lev == 0:
-        x.m_r = 0
+        x.m_r.m_value = 0
     elif y.m_value.m_lev == curlev.m_value:
-        x.m_r = FP.getValue()
+        x.m_r.m_value = FP.getValue()
     else:
         OSS.Mark("level!")
-        x.m_r = 0
+        x.m_r.m_value = 0
     if y.m_value.m_class == PAR.getValue():
         GetReg(r)
-        Put(LDW.getValue(), r.m_value, x.m_r, x.m_a)
+        Put(LDW.getValue(), r.m_value, x.m_r.m_value, x.m_a.m_value)
         x.m_mode = VAR.getValue()
-        x.m_r = r.m_value
-        x.m_a = 0
+        x.m_r.m_value = r.m_value
+        x.m_a.m_value = 0
 
 def Field(x,y):
-    x.m_a += y.m_value.m_val
+    x.m_a.m_value += y.m_value.m_val
     x.m_type = y.m_value.m_type
 
 def Index(x, y):
@@ -149,16 +155,16 @@ def Index(x, y):
     if y.m_mode == CONST.getValue():
         if y.m_a < 0 or y.m_a >= x.m_type.m_len:
             OSS.Mark("bad index")
-            x.m_a += (y.m_a * x.m_type.m_base.m_size)
+            x.m_a.m_value += (y.m_a * x.m_type.m_base.m_size)
     else:
         if y.m_mode != REG.getValue():
             load(y)
-        Put(CHKI.getValue(), y.m_r, 0, x.m_type.m_len)
-        Put(MULI.getValue(), y.m_r, y.m_r, x.m_type.m_base.m_size)
-        if x.m_r != 0:
-            Put(ADD.getValue(), y.mr, x.m_r, y.m_r)
-            EXCL(regs, x.m_r)
-        x.m_r = y.m_r
+        Put(CHKI.getValue(), y.m_r.m_value, 0, x.m_type.m_len)
+        Put(MULI.getValue(), y.m_r.m_value, y.m_r.m_value, x.m_type.m_base.m_size)
+        if x.m_r.m_value != 0:
+            Put(ADD.getValue(), y.mr, x.m_r.m_value, y.m_r.m_value)
+            EXCL(regs, x.m_r.m_value)
+        x.m_r.m_value = y.m_r.m_value
     x.m_type = x.m_type.m_base
 
 def Open():
@@ -167,6 +173,10 @@ def Open():
     relx.m_value = 0
     cno.m_value = 0
     regs.m_value = set()
+
+def Close(S, globals):
+    Put(POP.getValue(), LNK.getValue(), SP.getValue(), 4)
+    Put(RET.getValue(), 0, 0, LNK.getValue())
 
 def GetReg(r):
     i = Variable(0)
@@ -177,15 +187,37 @@ def GetReg(r):
     r.m_value = i.m_value
 
 def Put(op, a, b, c):
-    localop = Variable(op)
+    op = Variable(op)
     if op >= 32:
-        DEC(localop, 64)
-    code.m_value[pc.m_value] = ASH(ASH(ASH(localop, 5) + a, 5) + b, 16) + (c % 0x10000)
+        DEC(op, 64)
+    code.m_value[pc.m_value] = ASH(ASH(ASH(op.m_value, 5) + a, 5) + b, 16) + (c % 0x10000)
     INC(pc)
 
 def TestRange(x):
     if x >= 0x8000 or x < -0x8000:
         OSS.Mark("value too large")
+
+def Header(size):
+    entry.m_value = pc.m_value
+    Put(ADDI.getValue(), SP.getValue(), 0, RISC.MEMSIZE - size)
+    Put(PSH.getValue(), LNK.getValue(), SP.getValue(), 4)
+
+def Enter(size):
+    Put(PSH.getValue(), LNK.getValue(), SP.getValue(), 4)
+    Put(PSH.getValue(), FP.getValue(), SP.getValue(), 4)
+    Put(ADD.getValue(), FP.getValue(), 0, SP.getValue())
+    Put(SUBI.getValue(), SP.getValue(), SP.getValue(), size)
+
+def EnterCmd(name):
+    comname.m_value[cno.m_value] = name
+    comadr.m_value[cno.m_value] = pc.m_value * 4
+    INC(cno)
+
+def Return(size):
+    Put(ADD.getValue(), SP.getValue(), 0, FP.getValue())
+    Put(POP.getValue(), FP.getValue(), SP.getValue(), 4)
+    Put(POP.getValue(), LNK.getValue(), SP.getValue(), size + 4)
+    Put(RET.getValue(), 0 , 0, LNK.getValue())
 
 def load(x):
     r = Variable(0)
@@ -194,18 +226,16 @@ def load(x):
             rel.m_value[relx] = SHORT(pc)
             INC(relx)
         GetReg(r)
-        Put(LDW.getValue(), r.m_value, x.m_r, x.m_a)
-        EXCL(regs, x.m_r)
-        x.m_r = r.m_value
+        Put(LDW.getValue(), r.m_value, x.m_r.m_value, x.m_a.m_value)
+        EXCL(regs, x.m_r.m_value)
+        x.m_r.m_value = r.m_value
     elif x.m_mode == CONST.getValue():
-        if x.m_a == 0:
-            x.m_r = 0
+        if x.m_a.m_value == 0:
+            x.m_r.m_value = 0
         else:
-            TestRange(x.m_a)
-            localr = Variable(0)
-            GetReg(localr)
-            x.m_r = localr
-            Put(ADDI.getValue(), x.m_r, 0, x.m_a)
+            TestRange(x.m_a.m_value)
+            GetReg(x.m_r)
+            Put(ADDI.getValue(), x.m_r.m_value, 0, x.m_a.m_value)
     x.m_mode = REG.getValue()
 
 def loadBool(x):
@@ -213,9 +243,58 @@ def loadBool(x):
         OSS.Mark("Boolean?")
     load(x)
     x.m_mode = COND.getValue()
-    x.m_a = 0
-    x.m_b = 0
+    x.m_a.m_value = 0
+    x.m_b.m_value = 0
     x.m_c = 1
+
+def PutOp(cd, x, y):
+    r = Variable(0)
+    if x.m_mode != REG.getValue():
+        load(x)
+    if x.m_r.m_value == 0:
+        GetReg(x.m_r)
+        r.m_value = 0
+    else:
+        r.m_value = x.m_r.m_value
+    if y.m_mode == CONST.getValue():
+        TestRange(y.m_a)
+        Put(cd+16, r.m_value, x.m_r.m_value, y.m_a)
+    else:
+        if y.m_mode != REG.getValue():
+            load(y)
+        Put(cd, x.m_r.m_value, r.m_value, y.m_r.m_value)
+        EXCL(regs, y.m_r.m_value)
+
+def negated(cond):
+    if ODD(cond):
+        return (cond - 1)
+    else:
+        return cond + 1
+
+def merged(L0, L1):
+    L2 = Variable(0)
+    L3 = Variable(1)
+    if L0 != 0:
+        L2.m_value = L0
+        while True:
+            L3.m_value = code.m_value[L2.m_value] % 0x10000
+            if L3.m_value == 0:
+                break
+            L2.m_value = L3.m_value
+        code.m_value[L2.m_value] = code.m_value[L2.m_value] - L3.m_value + L1
+        return L0
+    else:
+        return L1
+
+def fix(at, With):
+    code.m_value[at] = code.m_value[at] / 0x10000 * 0x10000 + (With % 0x10000)
+
+def FixLink(L):
+    L1 = Variable(0)
+    while L.m_value != 0:
+        L1.m_value = code.m_value[L.m_value] % 0x10000
+        fix(L.m_value, pc.m_value - L.m_value)
+        L.m_value = L1.m_value
 
 def Op1(op, x):
     t = Variable(0)
@@ -223,33 +302,185 @@ def Op1(op, x):
         if x.m_type.m_form != INTEGER.getValue():
             OSS.Mark("bad type")
         elif x.m_mode == CONST.getValue():
-            x.m_a = -x.m_a
+            x.m_a.m_value = -x.m_a.m_value
         else:
             if x.m_mode == VAR.getValue():
                 load(x)
-            Put(SUB.getValue(), x.m_r, 0, x.m_r)
+            Put(SUB.getValue(), x.m_r.m_value, 0, x.m_r.m_value)
     elif op == OSS.NOT.getValue():
         if x.m_mode!= COND.getValue():
             loadBool(x)
         x.m_c = negated(x.m_c)
-        t.m_value = x.m_a
-        x.m_a = x.m_b
-        x.m_b = t.m_value
+        t.m_value = x.m_a.m_value
+        x.m_a.m_value = x.m_b.m_value
+        x.m_b.m_value = t.m_value
+    elif op == OSS.AND.getValue():
+        if x.m_mode != COND.getValue():
+            loadBool(x)
+        Put(BEQ.getValue() + negated(x.m_c), x.m_r.m_value, 0, x.m_a.m_value)
+        EXCL(regs, x.m_r.m_value)
+        x.m_a.m_value = pc.m_value - 1
+        FixLink(x.m_b)
+        x.m_b.m_value = 0
+    elif op == OSS.OR.getValue():
+        if x.m_mode != COND.getValue():
+            loadBool(x)
+        Put(BEQ.getValue() + x.m_c, x.m_r.m_value, 0, x.m_b.m_value)
+        EXCL(regs, x.m_r.m_value)
+        x.m_b.m_value = pc.m_value - 1
+        FixLink(x.m_a)
+        x.m_a.m_value = 0
+
+def Op2(op, x, y):
+    if x.m_type.m_form == INTEGER.getValue() and y.m_type.m_form == INTEGER.getValue():
+        if x.m_mode == CONST.getValue() and y.m_mode == CONST.getValue():
+            if op == OSS.PLUS.getValue():
+                x.m_a.m_value += y.m_a.m_value
+            elif op == OSS.MINUS.getValue():
+                x.m_a.m_value += y.m_a.m_value
+            elif op == OSS.TIMES.getValue():
+                x.m_a.m_value = x.m_a.m_value * y.m_a.m_value
+            elif op == OSS.DIV.getValue():
+                x.m_a.m_value = x.m_a.m_value / y.m_a.m_value
+            elif op == OSS.MOD.getValue():
+                x.m_a.m_value = x.m_a.m_value % y.m_a.m_value
+        else:
+            if op == OSS.PLUS.getValue():
+                PutOp(ADD.getValue(), x, y)
+            elif op == OSS.MINUS.getValue():
+                PutOp(SUB.getValue(), x, y)
+            elif op == OSS.TIMES.getValue():
+                PutOp(MUL.getValue(), x, y)
+            elif op == OSS.DIV.getValue():
+                PutOp(DIV.getValue(), x, y)
+            elif op == OSS.MOD.getValue():
+                PutOp(MOD.getValue(), x, y)
+            else:
+                OSS.Mark("bad type")
+    elif x.m_type.m_form == BOOLEAN.getValue() and y.m_type.m_form == BOOLEAN.getValue():
+        if y.m_mode != COND.getValue():
+            loadBool(y)
+        if op == OSS.OR.getValue():
+            x.m_a.m_value = y.m_a.m_value
+            x.m_b.m_value = merged(y.m_b.m_value, x.m_b.m_value)
+            x.m_c = y.m_c
+        elif op == OSS.AND.getValue():
+            x.m_a.m_value = merged(y.m_a.m_value, x.m_a.m_value)
+            x.m_b.m_value = y.m_b.m_value
+            x.m_c = y.m_c
+    else:
+        OSS.Mark("bad type")
 
 def Relation(op, x, y):
     if x.m_type.m_form != INTEGER.getValue() or y.m_type.m_form != INTEGER.getValue():
         OSS.Mark("bad type")
     else:
-        if y.m_mode == CONST.getValue() and y.m_a == 0:
+        if y.m_mode == CONST.getValue() and y.m_a.m_value == 0:
             load(x)
         else:
             PutOp(CMP.getValue(), x ,y)
         x.m_c = op.m_value - OSS.EQL.getValue()
-        EXCL(regs, y.m_r)
+        EXCL(regs, y.m_r.m_value)
     x.m_mode = COND.getValue()
     x.m_type = boolType.m_value
-    x.m_a = 0
-    x.m_b = 0
+    x.m_a.m_value = 0
+    x.m_b.m_value = 0
+
+def Store(x, y):
+    r = Variable(0)
+    if x.m_type.m_form in {BOOLEAN.getValue(), INTEGER.getValue()} and (x.m_type.m_form == y.m_type.m_form):
+        if y.m_mode == COND.getValue():
+            Put(BEQ.getValue() + negated(y.m_c), y.m_r.m_value, 0, y.m_a.m_value)
+            EXCL(regs, y.m_r.m_value)
+            y.m_a.m_value = pc.m_value - 1
+            FixLink(y.m_b)
+            GetReg(y.m_r)
+            Put(ADDI.getValue(), y.m_r.m_value, 0, 1)
+            Put(BEQ.getValue(), 0, 0, 2)
+            FixLink(y.m_a)
+            Put(ADDI.getValue(), y.m_r.m_value, 0, 0)
+        elif y.m_mode != REG.getValue():
+            load(y)
+        if x.m_mode == VAR.getValue():
+            if x.m_lev == 0:
+                rel.m_value[relx.m_value] = SHORT(pc.m_value)
+                INC(relx)
+            Put(STW.getValue(), y.m_r.m_value, x.m_r.m_value, x.m_a.m_value)
+        else:
+            OSS.Mark("illegal assignment")
+        EXCL(regs, x.m_r.m_value)
+        EXCL(regs, y.m_r.m_value)
+    else:
+        OSS.Mark("incompatible assignment")
+
+def Parameter(x, ftyp, Class):
+    r = Variable(0)
+    if x.m_type == ftyp.m_value:
+        if Class == PAR.getValue():
+            if x.m_mode == VAR.getValue():
+                if x.m_a != 0:
+                    if x.m_lev == 0:
+                        rel.m_value[relx.m_value] = SHORT(pc.m_value)
+                        INC(relx)
+                    GetReg(r)
+                    Put(ADDI.getValue(), r.m_value, x.m_r.m_value, x.m_a.m_value)
+                else:
+                    r.m_value = x.m_r.m_value
+            else:
+                OSS.Mark("illegal parameter mode")
+            Put(PSH.getValue(), r.m_value, SP.getValue(), 4)
+            EXCL(regs, r.m_value)
+        else:
+            if x.m_mode != REG.getValue():
+                load(x)
+            Put(PSH.getValue(), x.m_r.m_value, SP.getValue(), 4)
+            EXCL(regs, x.m_r.m_value)
+    else:
+        OSS.Mark("bad parameter type")
+
+def CJump(x):
+    if x.m_type.m_form == BOOLEAN.getValue():
+        if x.m_mode != COND.getValue():
+            loadBool(x)
+        Put(BEQ.getValue() + negated(x.m_c), x.m_r.m_value, x.m_a.m_value)
+        EXCL(regs, x.m_r.m_value)
+        FixLink(x.m_b)
+        x.m_a.m_value = pc.m_value - 1
+    else:
+        OSS.Mark("Boolean?")
+        x.m_a.m_value = pc.m_value
+
+def BJump(L):
+    Put(BEQ.getValue(), 0, 0, L.m_value - pc.m_value)
+
+def FJump(L):
+    Put(BEQ.getValue(), 0, 0, L.m_value)
+    L.m_value = pc.m_value - 1
+
+def Call(x):
+    Put(BSR.getValue(), 0, 0, x.m_a.m_value - pc.m_value)
+
+def IOCall(x, y):
+    z = Item()
+    if x.m_a.m_value < 4:
+        if y.m_type.m_form != INTEGER.getValue():
+            OSS.Mark("Integer?")
+    if x.m_a.m_value == 1:
+        GetReg(z.m_r)
+        z.m_mode = REG.getValue()
+        z.m_type = intType.m_value
+        Put(RD.getValue(), z.m_r.m_value, 0, 0)
+        Store(y, z)
+    elif x.m_a.m_value == 2:
+        load(y)
+        Put(WRD.getValue(), 0, 0, y.m_r.m_value)
+        EXCL(regs, y.m_r.m_value)
+    elif x.m_a.m_value == 3:
+        load(y)
+        Put(WRH.getValue(), 0, 0, y.m_r.m_value)
+        EXCL(regs, y.m_r.m_value)
+    else:
+        Put(WRL.getValue(), 0, 0, 0)
 
 NEW(boolType)        
 boolType.m_value.m_form = BOOLEAN.getValue()

@@ -84,7 +84,6 @@ def Mark(msg):
 def Get(sym): #sym is a reference
     def Ident():
         i = 0 
-        k = 0
         while True:
             # Read in all the characters of the identifier
             if i < IDLEN.getValue():
@@ -93,6 +92,10 @@ def Get(sym): #sym is a reference
             Texts.Read(R, ch)
             if ((ch.m_value < '0') or (ch.m_value > '9')) and ((ch.m_value.upper() < 'A') or (ch.m_value.upper() > 'Z')):
                 break
+        while i < IDLEN.getValue():
+            id.m_value[i] = ''
+            i += 1
+        k = 0
         while (k < nkw.m_value) and (''.join(id.m_value) != keyTab[k].id):
             k = k + 1
         if k < nkw.m_value:
