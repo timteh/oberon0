@@ -25,7 +25,7 @@ def INC(var, increment = None):
         var.m_value += increment
 
 def SHORT(var):
-    pass
+    return var
 
 def EXCL(Set, element):
     Set.m_value.discard(element)
@@ -35,9 +35,16 @@ def INCL(Set, element):
 
 def ASH(var, shiftPos):
     var = var << shiftPos
+    return var
 
 def DEC(operand, decrement = None):
     if decrement is None:
         operand.m_value -= 1
     else:
         operand.m_value -= decrement
+
+def ODD(var):
+    if (var % 2) == 0:
+        return True
+    else:
+        return False
