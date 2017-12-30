@@ -25,7 +25,8 @@ def find(obj):
     s = Pointer(OSG.ObjDesc)
     x = Pointer(OSG.ObjDesc)
     s.m_value = topScope.m_value
-    print ''.join(OSS.id.m_value)
+    # Debugging
+    #print ''.join(OSS.id.m_value)
     guard.m_value.m_name = ''.join(OSS.id.m_value)
     while True:
         x.m_value = s.m_value.m_next
@@ -185,7 +186,7 @@ def StatSequence():
             OSS.Get(sym)
         else:
             OSS.Mark(")?")
-    print "calling statsequence"
+    # print "calling statsequence"
     while True:
         obj.m_value = guard.m_value
         if sym.m_value < OSS.IDENT.getValue():
@@ -295,7 +296,7 @@ def StatSequence():
             break
         else:
             OSS.Mark("; ?")
-    print "exiting statsequence"
+    # print "exiting statsequence"
 
 def NewObj(obj, Class):
     new = Pointer(OSG.ObjDesc)
@@ -315,12 +316,12 @@ def NewObj(obj, Class):
         obj.m_value = x.m_value.m_next
         OSS.Mark("mult def")
 
-def Type(Type):
+def Type(type_):
     obj = Pointer(OSG.ObjDesc)
     first = Pointer(OSG.ObjDesc)
     x = OSG.Item()
     tp = Pointer(OSG.TypeDesc)
-    Type.m_value = OSG.intType.m_value
+    type_.m_value = OSG.intType.m_value
     if sym.m_value != OSS.IDENT.getValue() and sym.m_value < OSS.ARRAY.getValue():
         OSS.Mark("type?")
         while True:
@@ -331,7 +332,7 @@ def Type(Type):
         find(obj)
         OSS.Get(sym)
         if obj.m_value.m_class == OSG.TYP.getValue():
-            Type.m_value = obj.m_value.m_type
+            type_.m_value = obj.m_value.m_type
         else:
             OSS.Mark("type?")
     elif sym.m_value == OSS.ARRAY.getValue():
@@ -343,17 +344,17 @@ def Type(Type):
             OSS.Get(sym)
         else:
             OSS.Mark("OF?")
-        Type(Type)
-        NEW(Type)
-        Type.m_value.m_form = OSG.ARRAY.getValue()
-        Type.m_value.m_base = tp.m_value
-        Type.m_value.m_len = SHORT(x.m_a.m_value)
-        Type.m_value.m_size = SHORT(Type.m_value.m_len * tp.m_value.m_size)
+        Type(tp)
+        NEW(type_)
+        type_.m_value.m_form = OSG.ARRAY.getValue()
+        type_.m_value.m_base = tp.m_value
+        type_.m_value.m_len = SHORT(x.m_a.m_value)
+        type_.m_value.m_size = SHORT(type_.m_value.m_len * tp.m_value.m_size)
     elif sym.m_value == OSS.RECORD.getValue():
         OSS.Get(sym)
-        NEW(Type)
-        Type.m_value.m_form = OSG.RECORD.getValue()
-        Type.m_value.m_size = 0
+        NEW(type_)
+        type_.m_value.m_form = OSG.RECORD.getValue()
+        type_.m_value.m_size = 0
         OpenScope()
         while True:
             if sym.m_value == OSS.IDENT.getValue():
@@ -363,7 +364,7 @@ def Type(Type):
                 while obj.m_value != guard.m_value:
                     obj.m_value.m_type = tp.m_value
                     obj.m_value.m_val = Type.m_value.m_size
-                    Type.m_value.m_size += obj.m_value.m_type.m_size
+                    type_.m_value.m_size += obj.m_value.m_type.m_size
                     obj.m_value = obj.m_value.m_next
             if sym.m_value == OSS.SEMICOLON.getValue():
                 OSS.Get(sym)
@@ -371,7 +372,7 @@ def Type(Type):
                 OSS.Mark("; ?")
             else:
                 break
-        Type.m_value.m_fields.m_value = topScope.m_value
+        type_.m_value.m_fields.m_value = topScope.m_value
         CloseScope()
         if sym.m_value == OSS.END.getValue():
             OSS.Get(sym)
@@ -595,6 +596,9 @@ def Module(S):
         OSG.Header(varsize)
         if sym.m_value == OSS.BEGIN.getValue():
             OSS.Get(sym)
+            StatSequence()
+        if sym.m_value == OSS.END.getValue():
+            OSS.Get(sym)
         else:
             OSS.Mark("END?")
         if sym.m_value == OSS.IDENT.getValue():
@@ -603,7 +607,7 @@ def Module(S):
             OSS.Get(sym)
         else:
             OSS.Mark("ident?")
-        if sym.m_value == OSS.PERIOD.getValue():
+        if sym.m_value != OSS.PERIOD.getValue():
             OSS.Mark(". ?")
         CloseScope()
         #if not OSS.error.m_value:

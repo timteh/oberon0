@@ -162,7 +162,7 @@ def Index(x, y):
         Put(CHKI.getValue(), y.m_r.m_value, 0, x.m_type.m_len)
         Put(MULI.getValue(), y.m_r.m_value, y.m_r.m_value, x.m_type.m_base.m_size)
         if x.m_r.m_value != 0:
-            Put(ADD.getValue(), y.mr, x.m_r.m_value, y.m_r.m_value)
+            Put(ADD.getValue(), y.m_r.m_value, x.m_r.m_value, y.m_r.m_value)
             EXCL(regs, x.m_r.m_value)
         x.m_r.m_value = y.m_r.m_value
     x.m_type = x.m_type.m_base
@@ -199,7 +199,7 @@ def TestRange(x):
 
 def Header(size):
     entry.m_value = pc.m_value
-    Put(ADDI.getValue(), SP.getValue(), 0, RISC.MEMSIZE - size)
+    Put(ADDI.getValue(), SP.getValue(), 0, RISC.MEMSIZE.getValue() - size.m_value)
     Put(PSH.getValue(), LNK.getValue(), SP.getValue(), 4)
 
 def Enter(size):
