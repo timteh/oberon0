@@ -10,6 +10,7 @@ import OssOSS
 
 #test compiler
 OssCompiler.Compile()
+OssCompiler.Decode()
 
 #close the OSS file handle as stated above
 OssOSS.R.m_value.close()

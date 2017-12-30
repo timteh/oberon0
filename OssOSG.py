@@ -2,6 +2,7 @@
 import OssOSS as OSS
 import OssRISC as RISC
 from Util import *
+from struct import *
 
 # "constants"
 MAXCODE = Constant(1000)
@@ -190,7 +191,7 @@ def Put(op, a, b, c):
     op = Variable(op)
     if op >= 32:
         DEC(op, 64)
-    code.m_value[pc.m_value] = ASH(ASH(ASH(op.m_value, 5) + a, 5) + b, 16) + (c % 0x10000)
+    code.m_value[pc.m_value] = (ASH(ASH(ASH(op.m_value, 5) + a, 5) + b, 16) + (c % 0x10000)) & 0xffffffff
     INC(pc)
 
 def TestRange(x):
@@ -481,6 +482,13 @@ def IOCall(x, y):
         EXCL(regs, y.m_r.m_value)
     else:
         Put(WRL.getValue(), 0, 0, 0)
+
+def Decode():
+    for i in code.m_value:
+        if i != 0:
+            # Debug
+            print unpack('i', pack('I', (i & 0xffffffff)))[0]
+
 
 NEW(boolType)        
 boolType.m_value.m_form = BOOLEAN.getValue()

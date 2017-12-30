@@ -142,7 +142,7 @@ def SimpleExpression(x): #x : OSG.Item
         term(x)
     elif sym.m_value == OSS.MINUS.getValue():
         OSS.Get(sym)
-        PSG.Op1(OSS.MINUS.getValue(), x)
+        OSG.Op1(OSS.MINUS.getValue(), x)
     else:
         term(x)
     while sym.m_value >= OSS.PLUS.getValue() and sym.m_value <= OSS.OR.getValue():
@@ -260,7 +260,7 @@ def StatSequence():
                     OSS.Get(sym)
                 else:
                     OSS.Mark("THEN?")
-                    StatSequence()
+                StatSequence()
             if sym.m_value == OSS.ELSE.getValue():
                 OSS.Get(sym)
                 OSG.FJump(L)
