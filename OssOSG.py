@@ -120,9 +120,9 @@ mnemo = Variable(54 *[5*['']])
 def IncLevel(n):
     INC(curlev, n)
 
-def MakeConstItem(x, type, val):
+def MakeConstItem(x, Type, val):
     x.m_mode = CONST.getValue()
-    x.m_type = typ.m_value
+    x.m_type = Type.m_value
     x.m_a.m_value = val.m_value
 
 def MakeItem(x, y):
@@ -257,8 +257,8 @@ def PutOp(cd, x, y):
     else:
         r.m_value = x.m_r.m_value
     if y.m_mode == CONST.getValue():
-        TestRange(y.m_a)
-        Put(cd+16, r.m_value, x.m_r.m_value, y.m_a)
+        TestRange(y.m_a.m_value)
+        Put(cd + 16, r.m_value, x.m_r.m_value, y.m_a.m_value)
     else:
         if y.m_mode != REG.getValue():
             load(y)
@@ -442,7 +442,7 @@ def CJump(x):
     if x.m_type.m_form == BOOLEAN.getValue():
         if x.m_mode != COND.getValue():
             loadBool(x)
-        Put(BEQ.getValue() + negated(x.m_c), x.m_r.m_value, x.m_a.m_value)
+        Put(BEQ.getValue() + negated(x.m_c), x.m_r.m_value, 0, x.m_a.m_value)
         EXCL(regs, x.m_r.m_value)
         FixLink(x.m_b)
         x.m_a.m_value = pc.m_value - 1
