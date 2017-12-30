@@ -45,6 +45,6 @@ def DEC(operand, decrement = None):
 
 def ODD(var):
     if (var % 2) == 0:
-        return True
-    else:
         return False
+    else:
+        return True

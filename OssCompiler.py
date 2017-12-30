@@ -25,7 +25,7 @@ def Compile():
         OSP.Module(0)
 
 def Decode():
-    pass
+    OSG.Decode()
 
 def Load():
     pass
