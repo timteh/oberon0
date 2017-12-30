@@ -146,13 +146,17 @@ def SimpleExpression(x): #x : OSG.Item
         term(x)
     while sym.m_value >= OSS.PLUS.getValue() and sym.m_value <= OSS.OR.getValue():
         op.m_value = sym.m_value
-        OSS.Get(sym) 
+        OSS.Get(sym)
+        if op.m_value == OSS.OR.getValue():
+            OSG.Op1(op.m_value, x)
+        term(y)
+        OSG.Op2(op.m_value, x, y)
 
 def expression(x): #x : OSG.Item
     y = OSG.Item()
     op = Variable(0)
     SimpleExpression(x)
-    if sym >= OSS.EQL.getValue() and sym <= OSS.GTR.getValue():
+    if sym.m_value >= OSS.EQL.getValue() and sym.m_value <= OSS.GTR.getValue():
         op.m_value = sym.m_value
         OSS.Get(sym)
         SimpleExpression(y)
@@ -181,7 +185,7 @@ def StatSequence():
             OSS.Get(sym)
         else:
             OSS.Mark(")?")
-
+    print "calling statsequence"
     while True:
         obj.m_value = guard.m_value
         if sym.m_value < OSS.IDENT.getValue():
@@ -263,6 +267,7 @@ def StatSequence():
                 StatSequence()
             else:
                 OSG.FixLink(x.m_a)
+
             OSG.FixLink(L)
             if sym.m_value == OSS.END.getValue():
                 OSS.Get(sym)
@@ -290,7 +295,8 @@ def StatSequence():
             break
         else:
             OSS.Mark("; ?")
-                        
+    print "exiting statsequence"
+
 def NewObj(obj, Class):
     new = Pointer(OSG.ObjDesc)
     x = Pointer(OSG.ObjDesc)
