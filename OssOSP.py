@@ -167,7 +167,10 @@ def parameter(fp):
     x = OSG.Item()
     expression(x)
     if IsParam(fp):
-        OSG.Parameter
+        OSG.Parameter(x, fp.m_value.m_type, fp.m_value.m_class)
+        fp.m_value = fp.m_value.m_next
+    else:
+        OSS.Mark("too many parameters")
 
 def StatSequence():
     par = Pointer(OSG.ObjDesc)
@@ -434,7 +437,7 @@ def declarations(varsize):
                 OSS.Get(sym)
                 while sym.m_value == OSS.IDENT.getValue():
                     NewObj(obj, OSG.TYP.getValue())
-                    OSS.Get(Sym)
+                    OSS.Get(sym)
                     if sym.m_value == OSS.EQL.getValue():
                         OSS.Get(sym)
                     else:
@@ -495,7 +498,7 @@ def ProcedureDec1():
             OSS.Mark("ident?")
             tp.m_value = OSG.intType.m_value
         if first.m_value.m_class == OSG.VAR.getValue():
-            parsize.m_value = WordSize
+            parsize.m_value = WORDSIZE.getValue()
         obj.m_value = first.m_value
         while obj.m_value != guard.m_value:
             obj.m_value.m_type = tp.m_value
