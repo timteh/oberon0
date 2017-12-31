@@ -335,7 +335,7 @@ def Type(type_):
         find(obj)
         OSS.Get(sym)
         if obj.m_value.m_class == OSG.TYP.getValue():
-            type_.m_value = obj.m_value.m_type
+            type_.m_value = obj.m_value.m_type.m_value
         else:
             OSS.Mark("type?")
     elif sym.m_value == OSS.ARRAY.getValue():
@@ -365,9 +365,9 @@ def Type(type_):
                 Type(tp)
                 obj.m_value = first.m_value
                 while obj.m_value != guard.m_value:
-                    obj.m_value.m_type = tp.m_value
+                    obj.m_value.m_type.m_value = tp.m_value
                     obj.m_value.m_val = Type.m_value.m_size
-                    type_.m_value.m_size += obj.m_value.m_type.m_size
+                    type_.m_value.m_size += obj.m_value.m_type.m_value.m_size
                     obj.m_value = obj.m_value.m_next
             if sym.m_value == OSS.SEMICOLON.getValue():
                 OSS.Get(sym)
@@ -426,7 +426,7 @@ def declarations(varsize):
                 expression(x)
                 if x.m_mode == OSG.CONST.getValue():
                     obj.m_value.m_val = x.m_a.m_value
-                    obj.m_value.m_type = x.m_type
+                    obj.m_value.m_type.m_value = x.m_type
                 else:
                     OSS.Mark("expression not constant")
                 if sym.m_value == OSS.SEMICOLON.getValue():
@@ -454,9 +454,9 @@ def declarations(varsize):
                 Type(tp)
                 obj.m_value = first.m_value
                 while obj.m_value != guard.m_value:
-                    obj.m_value.m_type = tp.m_value
+                    obj.m_value.m_type.m_value = tp.m_value
                     obj.m_value.m_lev = OSG.curlev.m_value
-                    varsize.m_value = varsize.m_value + obj.m_value.m_type.m_size
+                    varsize.m_value = varsize.m_value + obj.m_value.m_type.m_value.m_size
                     obj.m_value.m_val -= varsize.m_value
                     obj.m_value = obj.m_value.m_next
                 if sym.m_value == OSS.SEMICOLON.getValue():
@@ -490,7 +490,7 @@ def ProcedureDec1():
             find(obj)
             OSS.Get(sym)
             if obj.m_value.m_class == OSG.TYP.getValue():
-                tp.m_value = obj.m_value.m_type
+                tp.m_value = obj.m_value.m_type.m_value
             else:
                 OSS.Mark("type?")
                 tp.m_value = OSG.intType.m_value
@@ -501,7 +501,7 @@ def ProcedureDec1():
             parsize.m_value = WORDSIZE.getValue()
         obj.m_value = first.m_value
         while obj.m_value != guard.m_value:
-            obj.m_value.m_type = tp.m_value
+            obj.m_value.m_type.m_value = tp.m_value
             INC(parblksize, parsize.m_value)
             obj.m_value = obj.m_value.m_next
     
@@ -536,7 +536,7 @@ def ProcedureDec1():
             if obj.m_value.m_class == OSG.PAR.getValue():
                 DEC(locblksize, WORDSIZE.getValue())
             else:
-                locblksize.m_value = locblksize.m_value - obj.m_value.m_type.m_size
+                locblksize.m_value = locblksize.m_value - obj.m_value.m_type.m_value.m_size
             obj.m_value.m_val = locblksize.m_value
             obj.m_value = obj.m_value.m_next
         proc.m_value.m_dsc = topScope.m_value.m_next
@@ -626,7 +626,7 @@ def enter(cl, n, name, Type):
     obj.m_value.m_class = cl
     obj.m_value.m_val = n
     obj.m_value.m_name = name
-    obj.m_value.m_type = Type
+    obj.m_value.m_type.m_value = Type
     obj.m_value.m_dsc = None
     obj.m_value.m_next = topScope.m_value.m_next
     topScope.m_value.m_next = obj.m_value
@@ -635,7 +635,7 @@ def enter(cl, n, name, Type):
 print "Oberon0 Compiler  9.2.95"
 NEW(guard)
 guard.m_value.m_class = OSG.VAR.getValue()
-guard.m_value.m_type = OSG.intType.m_value
+guard.m_value.m_type.m_value = OSG.intType.m_value
 guard.m_value.m_val = 0
 topScope.m_value = None
 OpenScope()

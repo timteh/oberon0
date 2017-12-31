@@ -90,7 +90,7 @@ class ObjDesc:
         self.m_lev = 0
         self.m_next = None # Pointer to ObjDesc
         self.m_dsc =  None # Pointer to ObjDesc
-        self.m_type = None # Pointer to TypeDesc
+        self.m_type = Pointer(TypeDesc) # Pointer to TypeDesc
         self.m_name = 0
         self.m_val = 0
 
@@ -129,7 +129,7 @@ def MakeConstItem(x, Type, val):
 def MakeItem(x, y):
     r = Variable(0)
     x.m_mode = y.m_value.m_class
-    x.m_type = y.m_value.m_type
+    x.m_type = y.m_value.m_type.m_value
     x.m_lev = y.m_value.m_lev
     x.m_a.m_value = y.m_value.m_val
     if y.m_value.m_lev == 0:
@@ -148,7 +148,7 @@ def MakeItem(x, y):
 
 def Field(x,y):
     x.m_a.m_value += y.m_value.m_val
-    x.m_type = y.m_value.m_type
+    x.m_type = y.m_value.m_type.m_value
 
 def Index(x, y):
     if y.m_type != intType.m_value:
@@ -484,10 +484,32 @@ def IOCall(x, y):
         Put(WRL.getValue(), 0, 0, 0)
 
 def Decode():
-    for i in code.m_value:
-        if i != 0:
-            # Debug
-            print unpack('i', pack('I', (i & 0xffffffff)))[0]
+    # Debug
+    #for i in code.m_value:
+    #    if i != 0:
+    #        print unpack('i', pack('I', (i & 0xffffffff)))[0]
+    print "entry",
+    print entry.m_value * 4
+    i = Variable(0)
+    while i.m_value < pc.m_value:
+        cd = code.m_value[i.m_value]
+        a = Variable(cd % 0x10000)
+        if a >= 0x8000:
+            DEC(a, 0x10000)
+            a.m_value &= 0xffff
+        print str(4 * i.m_value) + " ",
+        print str(mnemo.m_value[cd / 0x4000000 % 0x40]) + " ",
+        print str(cd / 0x200000 % 0x20) + ",",
+        print str(cd / 0x10000 % 0x20) + ",",
+        print unpack('h', pack('H', (a.m_value)))[0]
+        INC(i)
+    print "reloc"
+    while i.m_value < relx.m_value:
+        print rel.m_value[i.m_value] * 4
+        INC(i)
+        if i % 16 == 0:
+            print ""
+    print ""
 
 
 NEW(boolType)        
