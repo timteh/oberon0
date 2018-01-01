@@ -70,7 +70,7 @@ RD = Constant(50)
 WRD = Constant(51)
 WRH = Constant(52)
 WRL = Constant(53)
-FP = Constant(29)
+FP = Constant(29) # Frame pointer
 SP = Constant(30)
 LNK = Constant(31)
 
@@ -493,6 +493,13 @@ def Load():
     print "  code loaded"
     RISC.Execute(entry.m_value * 4, "")
 
+def Exec(S):
+    i = Variable(0)
+    while i.m_value < cno.m_value and S.split()[0] != comname.m_value[i.m_value]:
+        INC(i)
+    if i.m_value < cno.m_value:
+        RISC.Execute(comadr.m_value[i.m_value], S.split()[1:])
+
 def Decode():
     # Debug
     #for i in code.m_value:
@@ -504,14 +511,14 @@ def Decode():
     while i.m_value < pc.m_value:
         cd = code.m_value[i.m_value]
         a = Variable(cd % 0x10000)
-        if a >= 0x8000:
+        if a.m_value >= 0x8000:
             DEC(a, 0x10000)
-            a.m_value &= 0xffff
         print str(4 * i.m_value) + " ",
         print str(mnemo.m_value[cd / 0x4000000 % 0x40]) + " ",
         print str(cd / 0x200000 % 0x20) + ",",
         print str(cd / 0x10000 % 0x20) + ",",
-        print unpack('h', pack('H', (a.m_value)))[0]
+        print a.m_value
+        #print unpack('h', pack('H', (a.m_value)))[0]
         INC(i)
     print "reloc"
     while i.m_value < relx.m_value:
@@ -519,7 +526,6 @@ def Decode():
         INC(i)
         if i % 16 == 0:
             print ""
-
 
 NEW(boolType)        
 boolType.m_value.m_form = BOOLEAN.getValue()
