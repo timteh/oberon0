@@ -13,6 +13,7 @@ targets.
 Install Visual Studio Code
 Install the python extension for Visual Studio Code (ms-python.python)
 Install Python 2.7
+Select the python intepreter for Visual Studio Code (Ctrl-Shift-P, then type Python Intepreter)
 
 ### Contribution guidelines ###
 
