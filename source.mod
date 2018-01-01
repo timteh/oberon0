@@ -41,4 +41,18 @@ MODULE OssSample;
 				Write(i); Write(j); Write(a[j]); WriteLn
 			END BinSearch;
 
+		PROCEDURE Fibonacci;
+			VAR t1, t2, i, n, result: INTEGER;
+		BEGIN
+			Read(n); i := 0; t1 := 0; t2 := 1;
+			Write(t1); Write(t2);
+			WHILE i < n - 1 DO 
+				result := t1 + t2;
+				t1 := t2;
+				t2 := result;
+				i := i + 1;
+				Write(result);
+			END;
+			WriteLn;
+		END Fibonacci;
 	END OssSample.

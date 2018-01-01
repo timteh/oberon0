@@ -1,10 +1,8 @@
-
-# Author: Timothy Teh
-# some ideas for data types
-# constants: Util.Constant
-# references : Util.Variable
-# records: class
-# global variabes : Util.Variable()
+# A python port of the Oberon-0 compiler, as detailed in Professor Niklaus Wirth's book,
+# Compiler Construction - http://www-oldurls.inf.ethz.ch/personal/wirth/CompilerConstruction/index.html
+__author__ = "Timothy Teh"
+__email__ = "timothytehsw@gmail.com"
+__version__ = "0.0.1"
 
 import OssBB as Oberon
 import OssBB as Texts
