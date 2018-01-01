@@ -32,5 +32,5 @@ def Load():
         OSG.Load()
         loaded.m_value = True
 
-def Exec():
-    pass
+def Exec(S):
+    OSG.Exec(S)
