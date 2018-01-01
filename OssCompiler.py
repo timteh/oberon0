@@ -1,10 +1,8 @@
-# Author: Timothy Teh
-
-# some ideas for data types
-# constants: tuple of 1
-# references : list of 1
-# records: class
-# global variabes : list of 1
+# A python port of the Oberon-0 compiler, as detailed in Professor Niklaus Wirth's book,
+# Compiler Construction - http://www-oldurls.inf.ethz.ch/personal/wirth/CompilerConstruction/index.html
+__author__ = "Timothy Teh"
+__email__ = "timothytehsw@gmail.com"
+__version__ = "0.0.1"
 
 import OssOSS as OSS
 import OssBB as BB

@@ -1,11 +1,8 @@
-# MODULE OssOSP
-# Author: Timothy Teh
-
-# some ideas for data types
-# constants: tuple of 1
-# references : Variable class from util module, or a class itself
-# records: class
-# global variabes : Variable() class
+# A python port of the Oberon-0 compiler, as detailed in Professor Niklaus Wirth's book,
+# Compiler Construction - http://www-oldurls.inf.ethz.ch/personal/wirth/CompilerConstruction/index.html
+__author__ = "Timothy Teh"
+__email__ = "timothytehsw@gmail.com"
+__version__ = "0.0.1"
 
 import OssOSS as OSS
 import OssOSG as OSG
