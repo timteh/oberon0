@@ -28,7 +28,9 @@ def Decode():
     OSG.Decode()
 
 def Load():
-    pass
+    if not OSS.error.m_value and not loaded.m_value:
+        OSG.Load()
+        loaded.m_value = True
 
 def Exec():
     pass

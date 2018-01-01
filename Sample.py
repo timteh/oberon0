@@ -4,13 +4,15 @@
 # passing the file handle to "source.mod" to it
 
 import OssCompiler
-
 # import OSS required to close the file
 import OssOSS
+import OssRISC
 
 #test compiler
 OssCompiler.Compile()
 OssCompiler.Decode()
+OssCompiler.Load()
+OssRISC.State()
 
 #close the OSS file handle as stated above
 OssOSS.R.m_value.close()
