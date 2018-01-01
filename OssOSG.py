@@ -483,6 +483,16 @@ def IOCall(x, y):
     else:
         Put(WRL.getValue(), 0, 0, 0)
 
+def Load():
+    i = Variable(0)
+    while i.m_value < relx.m_value:
+        k = rel.m_value[i.m_value]
+        INC(i)
+        code.m_value[k] = (code.m_value[k] / 0x10000 * 0x10000) + code.m_value[k] + RISC.MEMSIZE.getValue() % 0x10000
+    RISC.Load(code.m_value, pc.m_value)
+    print "  code loaded"
+    RISC.Execute(entry.m_value * 4, "")
+
 def Decode():
     # Debug
     #for i in code.m_value:
@@ -509,7 +519,6 @@ def Decode():
         INC(i)
         if i % 16 == 0:
             print ""
-    print ""
 
 
 NEW(boolType)        
